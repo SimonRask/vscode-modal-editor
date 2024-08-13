@@ -333,7 +333,7 @@ export function findText(args: FindTextArgs) {
 			indexOf = (str: string, text: string, pos?: number) => { return str.indexOf(text, pos); };
 		}
 
-		let pos = indexOf(curLine.text, args.text, curPos.character + (args.backward ? -1 : 1));
+		let pos = indexOf(curLine.text + "\n", args.text, curPos.character + (args.backward ? -1 : 1));
 		if (pos >= 0) {
 			return updateSel(sel, curLine.lineNumber, pos);
 		}
@@ -347,7 +347,7 @@ export function findText(args: FindTextArgs) {
 			while ((args.backward && l >= end) || (!args.backward && l < end)) {
 				const line = editor.document.lineAt(l);
 
-				const pos = indexOf(line.text, args.text);
+				const pos = indexOf(line.text + "\n", args.text);
 
 				if (pos >= 0) {
 					return updateSel(sel, l, pos);
@@ -455,7 +455,9 @@ export type PasteArgs = {
 	 */
 	register?: string,
 	/// Paste before the current selection
-	before?: boolean
+	before?: boolean,
+	/// Replace with current selection
+	replace?: boolean,
 };
 
 /**
@@ -485,6 +487,10 @@ export async function paste(args?: PasteArgs) {
 			// insert before or after the current selection
 			getSelections(editor)
 				.forEach((selection, i) => {
+					if (args?.replace) {
+						editBuilder.delete(selection);
+					}
+
 					let pos = args?.before ? selection.start : selection.end;
 					const text = texts[Math.min(i, texts.length - 1)];
 
